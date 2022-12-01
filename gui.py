@@ -1,63 +1,88 @@
 from modules import functions
 import PySimpleGUI as sg
+import time
 
+sg.theme("Dark Amber")
+
+clock = sg.Text('', key="clock")
 label = sg.Text("Type in a to-do: ")
 input_box = sg.InputText(tooltip="Enter to-do", key='todo')
-add_button = sg.Button("Add")
+add_button = sg.Button(image_subsample=8, 
+                        image_source="icons/plus.png",
+                        mouseover_colors="LightGrey",
+                        tooltip='Add to-do', key="Add")
 list_box = sg.Listbox(values=functions.get_todos(), key='todos', 
                     enable_events=True, size=[45, 10])
-edit_button = sg.Button("Edit")
-complete_button = sg.Button("Complete")
+edit_button = sg.Button(image_subsample=4, 
+                        image_source="icons/edit.png",
+                        mouseover_colors="LightGrey",
+                        tooltip='Edit to-do', key="Edit")
+complete_button = sg.Button(image_subsample=4, 
+                        image_source="icons/check-mark.png",
+                        mouseover_colors="LightGrey",
+                        tooltip='Complete to-do', key="Complete")
 exit_button = sg.Button("Exit")
 
 window = sg.Window('My To-Do App', 
-                    layout=[[label], 
+                    layout=[[clock],
+                            [label], 
                             [input_box, add_button],
                             [list_box, edit_button, complete_button],
                             [exit_button]], 
                     font=('Helvetica', 20))
 
 while True:
-    event, values = window.read()
-    print(1, event)
-    print(2, values)
-    print(3, values['todos'])
+    event, values = window.read(timeout=500)
+    window["clock"].update(value=time.strftime("%b %d, %Y %H:%M:%S"))
+        
     match event:
         case 'Add':
             todos = functions.get_todos()
             new_todo = values['todo'] + '\n'
-
-            if new_todo == None:
-                break
+            
+            if new_todo == '\n':
+                sg.popup("Please enter an item first.", font=("Helvetica", 20))
+                continue
             todos.append(new_todo)
             functions.write_todos(todos)
             window['todos'].update(values=todos)
 
         case 'Edit':
-            todo_to_edit = values['todos'][0]
-            new_todo = values['todo'] + '\n'
-            
-            todos = functions.get_todos()
-            index = todos.index(todo_to_edit)
-            todos[index] = new_todo
-            functions.write_todos(todos)
-            window['todos'].update(values=todos)
-
+            try:
+                todo_to_edit = values['todos'][0]
+                new_todo = values['todo'] + '\n'
+                todos = functions.get_todos()
+                index = todos.index(todo_to_edit)
+                todos[index] = new_todo
+                functions.write_todos(todos)
+                window['todos'].update(values=todos)
+            except IndexError:
+                sg.popup("Please select an item first.", font=("Helvetica", 20))
         case "Complete":
-            todo_to_complete = values['todos'][0]
-            todos = functions.get_todos()
-            todos.remove(todo_to_complete)
-            functions.write_todos(todos)
-            window['todos'].update(values=todos)
-            window['todo'].update(value='')
+            try:
+                todo_to_complete = values['todos'][0]
+                todos = functions.get_todos()
+                todos.remove(todo_to_complete)
+                functions.write_todos(todos)
+                window['todos'].update(values=todos)
+                window['todo'].update(value='')
+            except IndexError:
+                sg.popup("Please select an item first.", font=("Helvetica", 20))
 
         case "Exit":
             break
+
+        case "__TIMEOUT__":
+            continue
 
         case 'todos':
             window['todo'].update(value=values['todos'][0])
 
         case sg.WIN_CLOSED:
             break
+
+    print(1, event)
+    print(2, values)
+    print(3, values['todos'])
 
 window.close()
