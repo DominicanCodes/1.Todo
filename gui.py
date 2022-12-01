@@ -1,6 +1,12 @@
 from modules import functions
 import PySimpleGUI as sg
 import time
+import os
+
+
+if not os.path.exists("todos.txt"):
+    with open("todos.txt", "w") as file:
+        pass
 
 sg.theme("Dark Amber")
 
@@ -23,11 +29,13 @@ complete_button = sg.Button(image_subsample=4,
                         tooltip='Complete to-do', key="Complete")
 exit_button = sg.Button("Exit")
 
+column_container = sg.Column(layout=[[edit_button], [complete_button]])
+
 window = sg.Window('My To-Do App', 
                     layout=[[clock],
                             [label], 
                             [input_box, add_button],
-                            [list_box, edit_button, complete_button],
+                            [list_box, column_container],
                             [exit_button]], 
                     font=('Helvetica', 20))
 
@@ -86,3 +94,25 @@ while True:
     print(3, values['todos'])
 
 window.close()
+
+
+# For Windows Packet: set-executionpolicy remotesigned -scope currentuser
+# pip install pyinstaller
+# pyinstaller --onefile --windowed --clean gui.py
+
+""" 
+If you dont use the --onefile command, 
+you can just drag and drop the images into the folder your exe is in.
+Or drop in the folder of images.
+
+If you do use onefile, you need to modify the .spec file you get 
+when you run the code pyinstaller script.py. Then 
+run pyinstaller scriptname.spec. 
+
+edit the datas variable somewhat like this
+
+datas = [('src/image.png', '.'),
+         ('src/image1.png', '.')]
+
+datas = [('icons/plus.png', '.'), ('icons/edit.png', '.'), ('icons/check-mark.png', '.'), ('icons/minus.png', '.')]
+"""
